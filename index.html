@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TextDiff Pro - Side-by-Side Diff Checker</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: #f8fafc; color: #1e293b; padding: 2rem 1rem; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        header { margin-bottom: 2rem; text-align: center; }
+        header h1 { font-size: 2.25rem; color: #0f172a; font-weight: 800; letter-spacing: -0.025em; }
+        header p { color: #64748b; margin-top: 0.5rem; }
+        .container { width: 100%; max-width: 1200px; display: flex; flex-direction: column; gap: 1.5rem; }
+        
+        /* Grid system for editors and viewers */
+        .diff-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+        @media (min-width: 768px) { .diff-grid { grid-template-columns: 1fr 1fr; } }
+        
+        .panel { display: flex; flex-direction: column; gap: 0.5rem; }
+        label { font-size: 0.875rem; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; }
+        
+        textarea { width: 100%; height: 250px; padding: 1rem; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 0.95rem; line-height: 1.6; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; resize: vertical; background: #ffffff; outline: none; transition: border-color 0.2s; }
+        textarea:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+        
+        .actions { display: flex; justify-content: center; margin: 0.5rem 0; }
+        button { background-color: #2563eb; color: white; border: none; padding: 0.75rem 2rem; font-size: 1rem; font-weight: 600; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+        button:hover { background-color: #1d4ed8; }
+        
+        /* Result output displays */
+        .output-view { width: 100%; min-height: 250px; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.95rem; line-height: 1.6; white-space: pre-wrap; overflow-x: auto; display: none; }
+        
+        /* Diff code colors */
+        .del { background-color: #fee2e2; color: #991b1b; text-decoration: line-through; display: block; width: 100%; padding: 0 0.25rem; }
+        .ins { background-color: #dcfce7; color: #166534; display: block; width: 100%; padding: 0 0.25rem; }
+        .unchanged { display: block; width: 100%; padding: 0 0.25rem; color: #64748b; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>TextDiff Pro</h1>
+        <p>Compare original and modified texts line-by-line instantly.</p>
+    </header>
+
+    <div class="container">
+        <div class="diff-grid">
+            <div class="panel">
+                <label for="original">Original Text</label>
+                <textarea id="original" placeholder="Paste your original source text here..."></textarea>
+            </div>
+            <div class="panel">
+                <label for="modified">Modified Text</label>
+                <textarea id="modified" placeholder="Paste your revised or modified text here..."></textarea>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button id="compareBtn">Compare Texts</button>
+        </div>
+
+        <div class="diff-grid">
+            <div class="panel">
+                <label id="outLeftLabel" style="display:none;">Original Tracking</label>
+                <div id="outputOriginal" class="output-view"></div>
+            </div>
+            <div class="panel">
+                <label id="outRightLabel" style="display:none;">Modified Tracking</label>
+                <div id="outputModified" class="output-view"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('compareBtn').addEventListener('click', () => {
+            const originalLines = document.getElementById('original').value.split('\n');
+            const modifiedLines = document.getElementById('modified').value.split('\n');
+
+            let origMarkup = '';
+            let modMarkup = '';
+
+            const maxLines = Math.max(originalLines.length, modifiedLines.length);
+
+            for (let i = 0; i < maxLines; i++) {
+                const origLine = originalLines[i];
+                const modLine = modifiedLines[i];
+
+                if (origLine === modLine) {
+                    // Lines are completely identical
+                    if (origLine !== undefined) {
+                        origMarkup += `<span class="unchanged">${escapeHtml(origLine)}</span>\n`;
+                        modMarkup += `<span class="unchanged">${escapeHtml(modLine)}</span>\n`;
+                    }
+                } else {
+                    // Line mismatch processing
+                    if (origLine !== undefined && modLine !== undefined) {
+                        origMarkup += `<span class="del">- ${escapeHtml(origLine)}</span>\n`;
+                        modMarkup += `<span class="ins">+ ${escapeHtml(modLine)}</span>\n`;
+                    } else if (origLine !== undefined) {
+                        // Line was deleted entirely
+                        origMarkup += `<span class="del">- ${escapeHtml(origLine)}</span>\n`;
+                        modMarkup += `<span class="unchanged"></span>\n`;
+                    } else if (modLine !== undefined) {
+                        // Line was added entirely
+                        origMarkup += `<span class="unchanged"></span>\n`;
+                        modMarkup += `<span class="ins">+ ${escapeHtml(modLine)}</span>\n`;
+                    }
+                }
+            }
+
+            // Reveal labels and inject generated markup
+            document.getElementById('outLeftLabel').style.display = 'block';
+            document.getElementById('outRightLabel').style.display = 'block';
+            
+            const outOrig = document.getElementById('outputOriginal');
+            const outMod = document.getElementById('outputModified');
+            
+            outOrig.innerHTML = origMarkup || 'No content';
+            outMod.innerHTML = modMarkup || 'No content';
+            
+            outOrig.style.display = 'block';
+            outMod.style.display = 'block';
+        });
+
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
