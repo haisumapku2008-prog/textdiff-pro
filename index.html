@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TextDiff Pro - Advanced Multi-Mode Code Differ</title>
-    
+    <title>TextDiff Pro | Advanced Multi-Mode Code Differ</title>
+    <meta name="description" content="TextDiff Pro is an enterprise-grade structural difference checker and patch exporter for developers. Compare code, visualize changes, and generate Git patches instantly.">
+    <meta name="keywords" content="text diff tool, online code comparison, code differ, git patch generator, compare text files, unified diff viewer">
+    <link rel="canonical" href="https://yourdomain.com/textdiff-pro/">
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsdiff/5.2.0/diff.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -97,7 +100,6 @@
     <div class="toast" id="toast">Link copied to clipboard!</div>
 
     <script>
-        // State configuration parsing parameters
         window.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
             if(params.has('base')) document.getElementById('baseText').value = atob(params.get('base'));
@@ -120,10 +122,8 @@
             let patchString = "";
 
             if (level === "lines") {
-                // Generate standard Git unified patch layout format
                 patchString = Diff.createTwoFilesPatch("Original", "Modified", baseStr, newStr, "", "");
             } else {
-                // Custom handling engine wrapper to route characters/words parsing into a rendering patch structure
                 let changes = level === "chars" ? Diff.diffChars(baseStr, newStr) : Diff.diffWords(baseStr, newStr);
                 let oldPatch = "", newPatch = "";
                 
@@ -150,7 +150,6 @@
             diff2htmlUi.highlightCode();
         }
 
-        // Feature [4]: Shareable URL System Engine Encoder
         document.getElementById('shareBtn').addEventListener('click', () => {
             const baseStr = btoa(document.getElementById('baseText').value);
             const newStr = btoa(document.getElementById('newText').value);
@@ -163,7 +162,6 @@
             showToast("Shareable link loaded into system clipboard!");
         });
 
-        // Feature [5]: Copy Changes as Patch File
         document.getElementById('patchBtn').addEventListener('click', () => {
             const baseStr = document.getElementById('baseText').value;
             const newStr = document.getElementById('newText').value;
